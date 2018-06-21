@@ -56,12 +56,12 @@ class ProcessingQueue(Queue):
                 if encoded_res == f'STOP:{self.worker_id}':
                     break
 
-                timestamp, value = encoded_res.split(';')
+                timestamp, message = encoded_res.split(';')
                 timed_out = time.time() - float(timestamp) > float(timeout)
                 outdated = timed_out * 10
                 if timed_out:
-                    self._push_back(value)
-                    print(f'Pushed back: {value}')
+                    self._push_back(res)
+                    print(f'Pushed back: {res}')
 
                 elif outdated:
                     self._remove_from_processing(res)
@@ -70,7 +70,7 @@ class ProcessingQueue(Queue):
                 continue
 
     def _push_back(self, value):
-        self.r.rpush(self.topic, f'{time.time()};{value}')
+        self.r.rpush(self.topic, value)
 
     def _remove_from_processing(self, res):
         self.r.lrem(name=self.processing_queue, count=0, value=res)
