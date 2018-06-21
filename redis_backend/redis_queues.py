@@ -43,13 +43,15 @@ class TopicRedisQueue(Queue):
 
 class ProcessingQueue(Queue):
 
-    def maintain(self, timeout):
+    def maintain(self, timeout, frequency):
         """
         Push back unprocessed messages into topic's queue
         Args:
             timeout: timeout in seconds
+            frequency: maintain frequency (sec)
         """
         while True:
+            time.sleep(frequency)
             res = self.r.rpoplpush(src=self.processing_queue, dst=self.processing_queue)  # rolling the queue
             if res:
                 encoded_res = str(res, encoding='utf-8')
@@ -66,7 +68,6 @@ class ProcessingQueue(Queue):
                 elif outdated:
                     self._remove_from_processing(res)
             else:
-                time.sleep(1)
                 continue
 
     def _push_back(self, value):
