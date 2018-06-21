@@ -26,6 +26,8 @@ class TopicRedisQueue(Queue):
     """
     Reliable message queue based on Redis
     """
+    def push(self, value):
+        pass  # TODO implement push message into queue
 
     def __iter__(self):
         while True:
@@ -56,11 +58,13 @@ class ProcessingQueue(Queue):
 
                 timestamp, value = encoded_res.split(';')
                 timed_out = time.time() - float(timestamp) > float(timeout)
+                outdated = timed_out * 10
                 if timed_out:
-                    processed = self._remove_from_processing(res)
-                    if not processed:
-                        self._push_back(value)
-                        print(f'Pushed back: {value}')
+                    self._push_back(value)
+                    print(f'Pushed back: {value}')
+
+                elif outdated:
+                    self._remove_from_processing(res)
             else:
                 time.sleep(1)
                 continue
@@ -69,4 +73,4 @@ class ProcessingQueue(Queue):
         self.r.rpush(self.topic, f'{time.time()};{value}')
 
     def _remove_from_processing(self, res):
-        return self.r.lrem(name=self.processing_queue, count=0, value=res)
+        self.r.lrem(name=self.processing_queue, count=0, value=res)
